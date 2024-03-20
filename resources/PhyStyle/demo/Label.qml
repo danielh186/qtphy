@@ -8,9 +8,5 @@ import QtQuick.Templates 2.12 as T
 import PhyTheme 1.0
 
 T.Label {
-    id: control
-
-    color: PhyTheme.black
-    linkColor: PhyTheme.teal1
-    font: PhyTheme.font
+    font.pointSize: 12
 }

@@ -11,11 +11,13 @@
 #include <QFile>
 #include "device_info.hpp"
 #include "rauc.hpp"
+#include "camera_demo.hpp"
 
 void writeDefaultSettings()
 {
     QSettings settings;
     QList<QString> enabledPages = {
+        "Camera Demo",
         "Image Viewer",
         "Multimedia",
         "RAUC – Update Client",
@@ -41,14 +43,10 @@ int main(int argc, char *argv[])
 
     QCommandLineParser parser;
     parser.addHelpOption();
-    parser.addOptions({
-            {
-                {"c", "rauc-hawkbit-config"},
-                "RAUC hawkBit client configuration path",
-                "path",
-                "/etc/rauc-hawkbit-updater/config.conf"
-            }
-    });
+    parser.addOptions({{{"c", "rauc-hawkbit-config"},
+                        "RAUC hawkBit client configuration path",
+                        "path",
+                        "/etc/rauc-hawkbit-updater/config.conf"}});
     parser.process(app);
 
     QSettings settings;
@@ -66,11 +64,25 @@ int main(int argc, char *argv[])
         enabledPages.append(settings.value("name").toString());
     }
 
+    qmlRegisterUncreatableMetaObject(
+        EnumNamespace::staticMetaObject,
+        "Phytec.CameraDemo.Enums",
+        1, 0,
+        "EnumNamespace",
+        "Error: only enums"
+    );
+
     qmlRegisterSingletonType<DeviceInfo>("Phytec.DeviceInfo", 1, 0, "DeviceInfo",
                                          DeviceInfo::singletontypeProvider);
     qmlRegisterType<Rauc>("Phytec.Rauc", 1, 0, "Rauc");
+    qmlRegisterType<CameraDemo>("Phytec.CameraDemo", 1, 0, "CameraDemo");
 
     QQmlApplicationEngine engine;
+
+    CameraImageProvider* cameraFrameProvider = new CameraImageProvider;
+    engine.rootContext()->setContextProperty("cameraFrameProvider", cameraFrameProvider);
+    engine.addImageProvider(QLatin1String("myCam"), cameraFrameProvider);
+
     engine.addImportPath("qrc:///themes");
     engine.rootContext()->setContextProperty("raucHawkbitConfigPath",
                                              parser.value("rauc-hawkbit-config"));
